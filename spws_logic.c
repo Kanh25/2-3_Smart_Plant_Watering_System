@@ -44,9 +44,28 @@ ErrorCode LogSensorData(const SensorData_t *data){
 
 // hàm điều phối: kiểm tra đã tới chu kỳ đọc chưa, nếu rồi thì gọi 2 hàm trên, lưu vào SensorData_t
 ErrorCode SPWS_UpdateSensorData(const SystemSettings_t *settings,SystemState_t *state,SensorData_t *sensorData){
+    
     if(settings == NULL || state == NULL || sensorData == NULL){
         return ERR_INVALID_PARAM;
     }
+    state->sensorCheckCounter++;
+
+    if (state->sensorCheckCounter >= settings->sensorReadInterval_s){
+        ErrorCode err1 = ReadSoilMoisture(&sensorData->soilMoisturePercent);
+        if (err1 != ERR_OK)
+        {
+            return err1;   // truyền lỗi lên ngay, không cần đọc tiếp
+        }
+
+        ErrorCode err2 = ReadAirTemperature(&sensorData->airTemperatureCelsius);
+        if (err2 != ERR_OK)
+        {
+            return err2;
+        }
+        LogSensorData(sensorData); // ghi log giá trị vừa đọc được
+        state->sensorCheckCounter = 0;
+    } 
+    return ERR_OK; 
 }
 
 
