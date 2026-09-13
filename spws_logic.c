@@ -29,6 +29,7 @@ void LogWateringEvent(bool isStarting){
         printf("[LOG] Ket thuc tuoi nuoc\n");
     }    
 }
+
 //In trạng thái sensor
 ErrorCode LogSensorData(const SensorData_t *data){
     /* 1. Kiểm tra dữ liệu đầu vào hợp lệ  */
@@ -68,10 +69,33 @@ ErrorCode SPWS_UpdateSensorData(const SystemSettings_t *settings,SystemState_t *
     return ERR_OK; 
 }
 
+ErrorCode SPWS_HandleModeButton(SystemState_t *state){
+    if(state == NULL){
+        return ERR_INVALID_PARAM;
+    }
+    if (IsButton1Pressed()){
+        if (state->currentMode == MODE_AUTO){
+            // Chuyển AUTO → MANUAL
+            state->currentMode = MODE_MANUAL;
+            TurnPumpOff();
+            state->pumpState = PUMP_OFF;
+            state->wateringTimeCounter = 0;
+            LogModeChange(MODE_MANUAL);
+            //đổi mode, tắt bơm (TurnPumpOff()), reset wateringTimeCounter, đổi pumpState thành PUMP_OFF, gọi LogModeChange()
+        }
+        else{
+            // Chuyển MANUAL → AUTO
+            LogModeChange(MODE_AUTO);
+            state->currentMode = MODE_AUTO;
+        }
+    }
+    return ERR_OK;
+    
+}
 
 // ErrorCode SPWS_RunAutoMode(const SensorData_t *sensorData,const SystemSettings_t *settings,SystemState_t *state);
 // SPWS_RunManualMode()
-// SPWS_HandleModeButton()
+
 
 
 
